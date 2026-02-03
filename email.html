@@ -4,162 +4,246 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Very Simple Email</title>
+	<title>Contact Us</title>
 	<style>
-	.content {
-		margin: 0 auto;
-		width: 260px;
-		background: rgba(118, 120, 89, 0.06);
-		padding: 20px
-	}
-	.title {
-		font: normal 16px sans-serif;
-	}
-	.row input{
-		color:  #5f5f5f;
-		box-sizing: border-box;
-		box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);
-		padding: 10px 18px;
-		border: 1px solid #dbdbdb;
-		max-width: 260px;
-		width: 100%;
+		:root {
+			--bg: #0c1324;
+			--panel: #101a30;
+			--border: #1f2b45;
+			--accent: #3eb3ff;
+			--accent-strong: #7c5dff;
+			--text: #e9eef7;
+			--muted: #9fb0ca;
+			--error: #ff6b6b;
+			--success: #5ad678;
+			--shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+		}
 
-	}
-	.row label span{
-		display: block;
-		box-sizing: border-box;
-		color:  #5f5f5f;
-		padding: 10px 0 12px;
-		font-weight: bold;
-	}
+		* {
+			box-sizing: border-box;
+		}
 
-	#submit{
-		border-radius: 2px;
-		background-color:  #DF9A9A;
-		color: #ffffff;
-		font-weight: bold;
-		box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.08);
-		padding: 14px 22px;
-		border: 0;
-		margin-top: 15px;
-	}
-	.error{
-		color: rgba(255, 0, 0, 0.58);
-    	font-weight: 700;
-	}
-	
-	.success{
-		color: rgba(77, 181, 12, 0.85);
-    	font-weight: 700;
-	}
-	
+		body {
+			margin: 0;
+			min-height: 100vh;
+			font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+			background: radial-gradient(circle at 20% 20%, rgba(62, 179, 255, 0.12), transparent 32%),
+				radial-gradient(circle at 80% 0%, rgba(124, 93, 255, 0.16), transparent 30%),
+				linear-gradient(135deg, #0b1424, #0f1c35);
+			color: var(--text);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 40px 16px;
+		}
+
+		.card {
+			width: min(420px, 100%);
+			background: var(--panel);
+			border: 1px solid var(--border);
+			border-radius: 16px;
+			box-shadow: var(--shadow);
+			padding: 28px;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.card::after {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(circle at 25% 20%, rgba(62, 179, 255, 0.08), transparent 40%);
+			pointer-events: none;
+		}
+
+		.title {
+			margin: 0 0 8px;
+			font-size: 22px;
+			letter-spacing: 0.4px;
+		}
+
+		.subtitle {
+			margin: 0 0 20px;
+			color: var(--muted);
+			font-size: 14px;
+			line-height: 1.5;
+		}
+
+		form {
+			display: grid;
+			gap: 16px;
+		}
+
+		label {
+			display: grid;
+			gap: 8px;
+			font-size: 14px;
+			color: var(--muted);
+		}
+
+		input,
+		textarea,
+		button {
+			font: inherit;
+		}
+
+		input,
+		textarea {
+			width: 100%;
+			border-radius: 10px;
+			border: 1px solid var(--border);
+			background: #0a1020;
+			color: var(--text);
+			padding: 12px 14px;
+			transition: border-color 0.2s ease, box-shadow 0.2s ease;
+		}
+
+		textarea {
+			min-height: 120px;
+			resize: vertical;
+		}
+
+		input:focus,
+		textarea:focus {
+			outline: none;
+			border-color: var(--accent);
+			box-shadow: 0 0 0 3px rgba(62, 179, 255, 0.18);
+		}
+
+		.actions {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		button[type="submit"] {
+			appearance: none;
+			border: none;
+			border-radius: 12px;
+			padding: 12px 18px;
+			background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+			color: #0b1020;
+			font-weight: 700;
+			cursor: pointer;
+			box-shadow: 0 12px 30px rgba(62, 179, 255, 0.3);
+			transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+		}
+
+		button[type="submit"]:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 14px 40px rgba(62, 179, 255, 0.4);
+		}
+
+		button[type="submit"]:active {
+			transform: translateY(0);
+			box-shadow: 0 8px 24px rgba(62, 179, 255, 0.28);
+		}
+
+		button[disabled] {
+			cursor: not-allowed;
+			filter: grayscale(0.3) brightness(0.8);
+			box-shadow: none;
+		}
+
+		.note {
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.status {
+			min-height: 20px;
+			font-weight: 600;
+		}
+
+		.status.error {
+			color: var(--error);
+		}
+
+		.status.success {
+			color: var(--success);
+		}
 	</style>
 </head>
 <body>
-	<div class="content">
-		<form id='contactForm'>
-			<div class="title">
-				<h1>Contact Us</h1>
+	<main class="card" aria-labelledby="contact-title">
+		<h1 class="title" id="contact-title">Contact Us</h1>
+		<p class="subtitle">Drop a quick note and we will get back to you. No reloads, just a fast fetch.</p>
+		<form id="contactForm" novalidate>
+			<label for="from">
+				Email
+				<input id="from" name="from" type="email" autocomplete="email" required placeholder="you@example.com">
+			</label>
+			<label for="message">
+				Message
+				<textarea id="message" name="message" required placeholder="What can we help with?"></textarea>
+			</label>
+			<div class="actions">
+				<button id="submit" type="submit">Send message</button>
+				<span class="note">We typically respond within a day.</span>
 			</div>
-			<div class="row">
-				<label>
-					<span>Email</span>
-					<input type="email" id="from" required>
-				</label>
-			</div>
-			<div class="row">
-				<label>
-					<span>Message</span>
-					<input type="text" id="message" required>
-				</label>
-			</div>
+			<div class="status" id="status" role="status" aria-live="polite"></div>
+		</form>
+	</main>
+	<script>
+		const failureMessage = "Unable to send email right now. Please try again.";
+		const successMessage = "Message sent. Thanks for reaching out!";
 
-			<div class="row">
-				<input type="submit" id="submit" value="Send Email">
-			</div>
-			<div class="message">
-				<span id="error" class="error"></span>
-				<span id="success" class="success"></span>
+		const form = document.querySelector("#contactForm");
+		const statusEl = document.querySelector("#status");
+		const submitBtn = document.querySelector("#submit");
 
-			</div>
-			
-			</form>
-		</div>
-		<script>
-			// Define general error/success message 
-			var failureMessage = 'Unable to send email at this time, please try again later';
-			var successMessage = 'Message sent';
+		const setStatus = (message, type) => {
+			statusEl.textContent = message;
+			statusEl.className = `status ${type}`;
+		};
 
-			window.onload = function () {
-				// We use form submit to take advantage of the no-hassle HTML5 validation
-				document.querySelector("#contactForm").addEventListener("submit", function(e){
-					// Prevent form from submitting since we will do it ourselves
-					e.preventDefault ? e.preventDefault() : (event.returnValue = false);
-					// Clear any previous errors
-					document.getElementById("error").innerHTML = '';
-					
-					// We check for empty from and message fields on the slim chance that your user is using a browser that runs on coal and doesn't support html5 validation
-					if(document.getElementById('from').value.length ==0 || document.getElementById('message').value.length == 0){
-						document.getElementById("error").innerHTML = 'Please fill in all fields';
-						return false;
-					}
+		const serializeForm = () => {
+			const email = document.getElementById("from").value.trim();
+			const message = document.getElementById("message").value.trim();
+			return { from: email, message };
+		};
 
-					// Disable submit button
-					document.getElementById("submit").disabled = true;
-					
-					// Build our params variable
-					var params = "from=" + document.getElementById('from').value + "&message=" + document.getElementById('message').value;
+		form.addEventListener("submit", async (event) => {
+			event.preventDefault();
+			setStatus("", "");
 
-					// Initialize Request Object
-				    var request = new XMLHttpRequest();
-					request.open("POST", "email.php", true);
-					request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+			if (!form.checkValidity()) {
+				setStatus("Please fill in a valid email and a message.", "error");
+				return;
+			}
 
-					// onreadystatechange event is trigered whenever readyState changes, so this is where we process if the request succeeded or failed
-				    request.onreadystatechange = function() {
-				    	// We only care if the request is DONE (4)
-				        if (request.readyState == XMLHttpRequest.DONE ) {
-				        	// Our Script should return 201 Created status code when it has successfully sent a email
-							if(request.status == 201){
-			               		document.getElementById("success").innerHTML = successMessage;
-							}else if(request.status == 400) {
+			const payload = serializeForm();
+			submitBtn.disabled = true;
+			submitBtn.textContent = "Sending...";
 
-								var jsonErrorMessage = null;
-				              	// If an error occured, we check if a responsetext was sent back and if it contains JSON error message we can parse
-								if(request.responseText.length > 0){
-									try{
-					               		parsedResponse = JSON.parse(request.responseText);
-					               		if(parsedResponse.errors.length > 0){
-					               			jsonErrorMessage = parsedResponse.errors.join();
-					               		}
-				               		// if for whatever reason we did not get a JSON response back we show failure message
-				               	 	} catch (e) {
-					               	 	// Empty unless we want to show a custom message
-				               	 	}
-			               		}
-			               		// If nothing was return we still show an error message since it is considered a failed attempt
-				           		document.getElementById("error").innerHTML = (jsonErrorMessage != null ? jsonErrorMessage : failureMessage);
-
-				           // If we received any other status code which we don't handle we issue a failure error
-				           }else{
-				               document.getElementById("error").innerHTML = failureMessage;
-				           }
-
-				           // Reenable submit button
-				           document.getElementById("submit").disabled = false;
-				        }
-				    }
-				    // If request resulted in error we show failure message and reenable submit button
-				    request.onerror = function() {
-		 				document.getElementById("error").innerHTML = failureMessage;
-		 				document.getElementById("submit").disabled = false;
-					};
-				    
-				    // Fire request
-				    request.send(params);
-
+			try {
+				const response = await fetch("email.php", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"Accept": "application/json"
+					},
+					body: JSON.stringify(payload)
 				});
-			};
-		</script>
+
+				const isJson = response.headers.get("content-type")?.includes("application/json");
+				const data = isJson ? await response.json() : null;
+
+				if (response.status === 201) {
+					setStatus(successMessage, "success");
+					form.reset();
+				} else if (response.status === 400 && data?.errors?.length) {
+					setStatus(data.errors.join(", "), "error");
+				} else {
+					setStatus(failureMessage, "error");
+				}
+			} catch (error) {
+				setStatus(failureMessage, "error");
+			} finally {
+				submitBtn.disabled = false;
+				submitBtn.textContent = "Send message";
+			}
+		});
+	</script>
 </body>
 </html>

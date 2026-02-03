@@ -15,7 +15,7 @@ http://www.gnu.org/licenses/
 
 @Project YAES - Yet Another Email Script
 @Author Gui Yazbek
-@Version 1.0
+@Version 1.1
 
 */
 
@@ -24,57 +24,104 @@ http://www.gnu.org/licenses/
 // ini_set('display_errors',1);
 // error_reporting(-1);
 
-// Change these variables to suit your needs
-// You can override the from email by specifying it here
-$to      = "youremail@example.com";
-$from 	 = null;
-$subject = "Message Subject";
+// Change these values for your deployment
+$to            = "youremail@example.com";
+$subject       = "Message Subject";
+$fromOverride  = "no-reply@yourdomain.com"; // Use a domain-owned From for DMARC alignment
 
 
-if($_SERVER["REQUEST_METHOD"] =="POST"){
-
-	// Initialize error array
-	$errors = array();
-	if ($from == null && empty($_POST["from"])) {
-      $errors[] = 'Email is required';
-   	}else{
-   		// Filter to remove any illegal characters from email
-   		$from = filter_var($_POST["from"],FILTER_SANITIZE_EMAIL);
-   	}
-   	if (empty($_POST["message"])) {
-      $errors[] = 'Message is required';
-   	}else{
-   		// We strip out any HTML tags, you may remove it if you wish to preserve any HTML that is submitted
-   		$message = strip_tags($_POST["message"]);
-   	}
-
-   	// If you wish to do any further processing to the variables now is a good time
-
-   	// If there are errors we return them along with the appropriate header response, or else we send the message
-   	if (!empty($errors)) {
-   		header('HTTP/1.1 400 Bad Request');
-   		header('Content-Type: application/json');
-   		echo json_encode(array("errors" => $errors));
-	}else{
-		$headers  = 'From: ' . $from . "\r\n";
-		$headers .= 'Reply-To: ' . $from . "\r\n";
-		$headers .= 'X-Mailer: PHP/' . phpversion() . "\r\n";
-		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-		$headers .= 'MIME-Version: 1.0' . "\r\n";
-
-		// If the message sending fails return the appropriate headers
-		if(@mail($to, $subject, $message, $headers)){
-			header('HTTP/1.1 201 Created');
-		}else{
-			header('HTTP/1.0 500 Internal Server Error');
-			echo json_encode(array("errors" => array('Unable to send email at this time, please try again later')));
-		}
-
-	}
-// We only allow POST, so anything else is ignored
-}else{
-	header('HTTP/1.1 405 Method Not Allowed');
-	header('Allow: POST');
-	echo "{\"Method Not Allowed\"}";
+// Respond with an HTTP status and optional JSON payload
+function respond(int $status, array $payload = null): void {
+    http_response_code($status);
+    if ($payload !== null) {
+        header('Content-Type: application/json');
+        echo json_encode($payload);
+    }
+    exit;
 }
+
+
+// Only allow POST requests
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header('Allow: POST');
+    respond(405, array("errors" => array("Method Not Allowed")));
+}
+
+// Extract input supporting JSON or form-url-encoded bodies
+$contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+$rawBody = file_get_contents('php://input');
+$maxBodyBytes = 32768; // ~32 KB guardrail for JSON payloads
+$input = array();
+
+if (stripos($contentType, 'application/json') !== false) {
+    if (strlen($rawBody) > $maxBodyBytes) {
+        respond(413, array("errors" => array("Payload too large")));
+    }
+    $decoded = json_decode($rawBody, true);
+    if (!is_array($decoded)) {
+        respond(400, array("errors" => array("Invalid JSON payload")));
+    }
+    $input = $decoded;
+} else {
+    $input = $_POST;
+}
+
+// Validate fields
+$errors = array();
+
+$fromHeader = $fromOverride;
+$replyTo = null;
+
+$fromValue = isset($input['from']) ? trim($input['from']) : '';
+if ($fromValue === '') {
+    $errors[] = 'Email is required';
+} elseif (preg_match('/\r|\n/', $fromValue)) {
+    $errors[] = 'Email is not valid';
+} else {
+    $sanitized = filter_var($fromValue, FILTER_SANITIZE_EMAIL);
+    if (!filter_var($sanitized, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Email is not valid';
+    } else {
+        $replyTo = $sanitized;
+    }
+}
+
+if ($fromOverride !== null && !filter_var($fromOverride, FILTER_VALIDATE_EMAIL)) {
+    $errors[] = 'Configured fromOverride is not a valid email';
+}
+
+// Fall back to user email as From only if no override was configured
+if ($fromOverride === null) {
+    $fromHeader = $replyTo;
+}
+
+$message = isset($input['message']) ? trim($input['message']) : '';
+if ($message === '') {
+    $errors[] = 'Message is required';
+} else {
+    $message = strip_tags($message);
+    $maxLength = 5000;
+    $lengthFn = function_exists('mb_strlen') ? 'mb_strlen' : 'strlen';
+    if ($lengthFn($message) > $maxLength) {
+        $errors[] = 'Message is too long';
+    }
+}
+
+if (!empty($errors)) {
+    respond(400, array("errors" => $errors));
+}
+
+// Build headers with UTF-8 and no HTML content
+$headers  = 'From: ' . $fromHeader . "\r\n";
+$headers .= 'Reply-To: ' . $replyTo . "\r\n";
+$headers .= 'X-Mailer: PHP/' . phpversion() . "\r\n";
+$headers .= 'Content-Type: text/plain; charset=UTF-8' . "\r\n";
+$headers .= 'MIME-Version: 1.0' . "\r\n";
+
+if (mail($to, $subject, $message, $headers)) {
+    respond(201, array("status" => "sent"));
+}
+
+error_log('YAES mail() failed for recipient ' . $to);
+respond(500, array("errors" => array('Unable to send email at this time, please try again later')));
 ?>
